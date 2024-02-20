@@ -23,11 +23,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -37,6 +39,7 @@ import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.text.font.FontWeight
 import androidx.lifecycle.ViewModel
@@ -105,7 +108,8 @@ fun calculator_app(
         Column {
             Spacer(modifier = Modifier.weight(0.68f))
             Box(modifier = Modifier.weight(1f)) {
-                LazyList(milesState)
+                if(currentIndex == -1)  LazyList(milesState, 0)
+                else LazyList(milesState, currentIndex)
             }
             Spacer(modifier = Modifier.height(80.dp))
         }
@@ -113,7 +117,7 @@ fun calculator_app(
         Column{
             Spacer(modifier = Modifier.weight(0.68f))
             Box(modifier = Modifier.weight(1f)) {
-                NormalList(milesState)
+                NormalList(milesState, currentIndex)
             }
             Spacer(modifier = Modifier.height(80.dp))
         }
@@ -163,7 +167,7 @@ fun PreviewItem() {
             // Add Spacer to push the list to the bottom
             Spacer(modifier = Modifier.weight(0.2f))
             Box(modifier = Modifier.weight(1f)) {
-                LazyList(true)
+                NormalList(true, 2)
             }
             Spacer(modifier = Modifier.height(80.dp))
         }
@@ -173,48 +177,57 @@ fun PreviewItem() {
 }
 
 @Composable
-fun LazyList(miles: Boolean = false) {
-    val lazyListState = rememberLazyListState() // Remember the lazy list state
-    LazyColumn(state = lazyListState) { // Pass the lazy list state to LazyColumn
-        items(CreateStopsList()) { stop ->
-            if (miles) {
-                StopsList(stop.name, KilometersToMiles(stop.distance), "miles")
-            } else {
-                StopsList(stop.name, stop.distance, stop.unit)
+fun LazyList(miles: Boolean = false, currentIndex: Int) {
+    val lazyListState = rememberLazyListState()
+    LazyColumn(state = lazyListState) {
+        itemsIndexed(CreateStopsList()) { index, stop ->
+            if(miles){
+                StopsList(stop.name, KilometersToMiles(stop.distance), "miles", index == currentIndex)
+            }else{
+                StopsList(stop.name, stop.distance, stop.unit, index == currentIndex)
             }
         }
+    }
+    LaunchedEffect(currentIndex) {
+        lazyListState.scrollToItem(currentIndex)
     }
 }
 
 @Composable
-fun NormalList(miles: Boolean = false) {
-    val scrollState = rememberScrollState() // Remember the scroll state
+fun NormalList(miles: Boolean = false, currentIndex: Int) {
+    val scrollState = rememberScrollState()
     Column(
         modifier = Modifier
-            .verticalScroll(scrollState) // Pass the scroll state to verticalScroll
+            .verticalScroll(scrollState)
             .fillMaxWidth()
     ) {
-        if (miles) {
-            CreateStopsList().forEach {
-                StopsList(it.name, KilometersToMiles(it.distance), "miles")
+        if(miles == false){
+            CreateStopsList().forEachIndexed { index, stop ->
+                StopsList(stop.name, stop.distance, stop.unit, index == currentIndex)
             }
-        } else {
-            CreateStopsList().forEach {
-                StopsList(it.name, it.distance, it.unit)
+        }else{
+            CreateStopsList().forEachIndexed { index, stop ->
+                StopsList(stop.name, KilometersToMiles(stop.distance), "miles", index == currentIndex)
             }
+        }
+        LaunchedEffect(currentIndex) {
+            scrollState.scrollTo(currentIndex * 150)
         }
     }
 }
 
-
 @Composable
-fun StopsList(stop: String, int: Int, unit: String) {
+fun StopsList(stop: String, int: Int, unit: String, isCurrentIndex: Boolean) {
+    val backgroundColor = if (isCurrentIndex) Color.Red else Color.White
+    val textColor = if (isCurrentIndex) Color.White else Color.Black // Change text color as needed
+
     Card(
         elevation = 8.dp,
         modifier = Modifier
             .padding(horizontal = 16.dp, vertical = 4.dp)
             .fillMaxWidth()
-            .shadow(8.dp)
+            .shadow(8.dp),
+        backgroundColor = backgroundColor
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Column {
@@ -222,11 +235,12 @@ fun StopsList(stop: String, int: Int, unit: String) {
                     "\t$stop",
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(12.dp)
+                    modifier = Modifier.padding(12.dp),
+                    color = textColor
                 )
             }
             Column {
-                Text("$int $unit", fontSize = 20.sp, modifier = Modifier.padding(12.dp))
+                Text("$int $unit", fontSize = 20.sp, modifier = Modifier.padding(12.dp), color = textColor)
             }
         }
     }
