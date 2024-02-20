@@ -1,3 +1,17 @@
 <resources>
-    <string name="app_name">travel-calculator</string>
+    <string name="app_name">Travel Calculator</string>
+    <string name="subheading">CSE535 Assignment 1</string>
+    <string name="kilometers">Kilometers</string>
+    <string name="miles">Miles</string>
+    <string name="unit">Unit</string>
+    <string name="list_type">List Type</string>
+    <string name="normal_list">Normal List</string>
+    <string name="lazy_list">Lazy List</string>
+    <string name="next_stop">Next Stop</string>
+    <string name="Distance_Travelled">Distance Travelled</string>
+    <string name="Distance_Remaining">Distance Remaining</string>
+    <string name="next">Next</string>
+    <string name="textview">TextView</string>
+
+
 </resources>
